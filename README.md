@@ -37,7 +37,17 @@ See a [sample report](examples/sample-report.html). GitHub shows it as code, so 
 
 ## Install
 
-**Claude Code:** copy this folder into your skills directory.
+**Claude Code plugin:** add this repo as a marketplace, then install the plugin.
+
+```bash
+claude plugin marketplace add alabetskiy/philly-property-analyzer
+```
+
+```bash
+claude plugin install philly-property-analyzer@philly-property-analyzer
+```
+
+**Claude Code, manually:** copy this folder into your skills directory.
 
 ```bash
 git clone https://github.com/alabetskiy/philly-property-analyzer.git ~/.claude/skills/philly-property-analyzer

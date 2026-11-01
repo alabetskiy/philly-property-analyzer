@@ -1,0 +1,16 @@
+{
+  "name": "philly-property-analyzer",
+  "description": "Check any Philadelphia address against public records before you buy, rent, or invest.",
+  "owner": {
+    "name": "alabetskiy"
+  },
+  "plugins": [
+    {
+      "name": "philly-property-analyzer",
+      "source": "./",
+      "description": "Runs a before-you-sign public-records check on any Philadelphia address and turns it into plain-English red flags, questions to ask, and a shareable report.",
+      "license": "MIT",
+      "keywords": ["philadelphia", "property-records", "real-estate", "open-data"]
+    }
+  ]
+}
