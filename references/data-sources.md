@@ -6,7 +6,7 @@ All sources are public and need no API key. Availability was checked **2026-11-0
 |---|---|---|---|
 | Address lookup | `api.phila.gov/ais/v1/search/` | Parcel ID, zoning, historic status, schools, coordinates | Silently returns the building when a unit isn't known. Often has no account number for condos. The script handles both. |
 | Property record | `opa_properties_public` | Owner, value, size, age, condition, last sale | Condition codes can be years old. Interiors are mostly never inspected. |
-| Assessment history | `assessments` | Value by year, abatement start | Back to 2013 at most. Doesn't name the type of exemption. |
+| Assessment history | `assessments` | Value by year, abatement start, year-over-year bill | Back to 2013 at most. Doesn't name the type of exemption. Bills are worked out from taxable value at today's rate, not read from actual bills. |
 | Recorded documents | `rtt_summary` | Deeds, sheriff's deeds, mortgages | Lags the assessor's sale field. In testing, one sale from September 2026 showed in the assessor's record with no matching deed yet. Contains typo dates such as year 9798. |
 | Code violations | `violations` | Open and past L&I cases | Only what someone reported and L&I cited. |
 | Dangerous buildings | `unsafe`, `imm_dang` | Open structural cases, including neighbors | Neighbor search uses an approximate 80-foot radius, so it can't confirm a shared wall. |

@@ -10,6 +10,9 @@ from datetime import date, datetime, timedelta
 # Rates checked against phila.gov and published notices on 2026-11-01. See references/philly-playbook.md.
 TAX_RATE = 0.013998
 HOMESTEAD_EXCLUSION = 100000
+# A year-over-year rise has to clear both to flag. In a 46-parcel sample, about 7% of parcels did for 2027.
+TAX_JUMP_MIN_DOLLARS = 1000
+TAX_JUMP_MIN_SHARE = 0.25
 TRANSFER_TAX_RATE = 0.04578
 RATES_CHECKED = "2026-11-01"
 PAST_HOMESTEAD_AMOUNTS = {30000, 45000, 80000, 100000}
@@ -490,6 +493,17 @@ def compute_tax(data, today):
         "rates_checked": RATES_CHECKED,
         "history": [{"year": h.get("year"), "market_value": _num(h.get("market_value"))} for h in history],
     }
+    prior = history[-2] if len(history) >= 2 else None
+    # Only consecutive years count, because a gap in the history isn't a year-over-year change.
+    if prior and str(prior.get("year")).isdigit() and result["year"] == int(prior["year"]) + 1:
+        prior_taxable = _num(prior.get("taxable_land")) + _num(prior.get("taxable_building"))
+        result["prior_year"] = {
+            "year": int(prior["year"]),
+            "market_value": _num(prior.get("market_value")),
+            "taxable": prior_taxable,
+            "exempt": _num(prior.get("exempt_land")) + _num(prior.get("exempt_building")),
+            "bill": round(prior_taxable * TAX_RATE),
+        }
     other_exemption = exempt_building - homestead
     if other_exemption > 0 and not result["fully_exempt"] and exempt_building not in PAST_HOMESTEAD_AMOUNTS:
         result["abated"] = True
@@ -515,6 +529,21 @@ def analyze_tax(data, ctx, tax, today):
     for_whom = ctx.get("audience") or "buyer"
     year_label = f"tax year {tax['year']}" if tax.get("year") else "the latest year"
 
+    prior = tax.get("prior_year")
+    if prior:
+        rise = tax["current_bill"] - prior["bill"]
+        if rise >= TAX_JUMP_MIN_DOLLARS and tax["current_bill"] >= prior["bill"] * (1 + TAX_JUMP_MIN_SHARE):
+            exempt_now = tax["market_value"] - tax["taxable"]
+            flags.append(_flag(
+                "tax", "warn", f"Tax bill jumps about {_money(rise)} in {year_label}",
+                f"Tax year {prior['year']} about {_money(prior['bill'])} on {_money(prior['taxable'])} taxable; "
+                f"{year_label} about {_money(tax['current_bill'])} on {_money(tax['taxable'])}. "
+                f"The city's value went from {_money(prior['market_value'])} to {_money(tax['market_value'])}, "
+                f"and the exempt amount from {_money(prior['exempt'])} to {_money(exempt_now)}.",
+                f"That's about {_money(round(rise / 12))} a month. Budgets and mortgage escrow based on last year's bill will fall short. Both figures are estimates at today's rate, not the actual bills.",
+                "Why did the bill change this much, and is the exempt amount on record correct? OPA can confirm.",
+                LINKS["property"]))
+
     if tax["fully_exempt"]:
         flags.append(_flag(
             "tax", "warn", "Currently pays no real estate tax",
@@ -527,11 +556,11 @@ def analyze_tax(data, ctx, tax, today):
         # Severity assumes a possible occupant takes Homestead; the quoted figure can't, since nobody knows they will.
         severity_extra = tax["with_homestead_bill"] - tax["current_bill"] if may_occupy else extra
         homestead_note = f" With Homestead, if the owner lives here, about {_money(tax['with_homestead_bill'])}." if may_occupy else ""
-        owner =(data.get("opa") or {}).get("owner_1") or ""
+        owner = (data.get("opa") or {}).get("owner_1") or ""
         if PUBLIC_OWNER.search(owner.upper()):
             flags.append(_flag(
                 "tax", "warn", "Partial tax exemption may not survive a sale",
-                f"Now about {_money(tax['current_bill'])} a year; without the exemption about {_money(tax['full_bill'])}. Owner on record: {owner}.",
+                f"About {_money(tax['current_bill'])} a year for {year_label}; without the exemption about {_money(tax['full_bill'])}. Owner on record: {owner}.",
                 "This exemption looks tied to a public or institutional owner, so a private buyer shouldn't count on it.",
                 "What is this exemption based on, and does it end at sale?", LINKS["property"]))
             return flags
@@ -544,7 +573,7 @@ def analyze_tax(data, ctx, tax, today):
         when = f"around {end} (estimate based on when the exemption first appears)" if end else "on a date to confirm with OPA"
         flags.append(_flag(
             "tax", severity, "Abatement cliff: the tax bill is due to jump",
-            f"Now about {_money(tax['current_bill'])} a year on {_money(tax['taxable'])} taxable. "
+            f"About {_money(tax['current_bill'])} a year for {year_label} on {_money(tax['taxable'])} taxable. "
             f"Without the abatement about {_money(tax['full_bill'])} a year, or {_money(extra)} more.{homestead_note} It ends {when}.",
             "Philadelphia abatements exempt new construction or improvements for a fixed term. Mortgage quotes based on today's bill can understate what you'll pay later. Newer abatements also phase down year by year, so the increase may arrive early.",
             "What year does the abatement end, and is it the phased version? Run your budget on the full bill. Note Homestead can't be used while a 10-year abatement is active.",

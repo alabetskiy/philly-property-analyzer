@@ -16,6 +16,7 @@ See a [sample report](examples/sample-report.html). GitHub shows it as code, so 
 |---|---|---|
 | **Ghost renovation** | A big price jump with no permit trail, or listing claims with no matching permit | New finishes can hide unchecked wiring and structure |
 | **Abatement cliff** | Tax bills held low by an expiring abatement, with the bill before and after | Can add thousands a year that the monthly payment quote leaves out |
+| **Tax bill jump** | A large rise from last tax year to the latest one, with the value and exempt amount behind it | Budgets and escrow based on last year's bill will fall short |
 | **The real tax bill** | Today's bill, with Homestead, and with no exclusions | The seller's number may not be yours |
 | **Deed-fraud signals** | Seller doesn't match the record, or a near-$0 transfer followed by a quick sale | Philadelphia has a long-running deed-theft problem |
 | **Party-wall risk** | Unsafe buildings and recent demolitions within about 80 feet | Rowhouses share walls, so a neighbor's problem can become yours |
