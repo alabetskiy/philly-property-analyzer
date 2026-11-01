@@ -240,6 +240,25 @@ class AbatementEdgeTests(unittest.TestCase):
         self.assertEqual(cliff["severity"], "warn")
         self.assertIn("confirm with OPA", cliff["evidence"])
 
+    def cliff(self, audience):
+        history = [{"year": "2018", "market_value": 500000, "taxable_land": 100000, "taxable_building": 150000, "exempt_land": 0, "exempt_building": 250000},
+                   {"year": "2027", "market_value": 500000, "taxable_land": 100000, "taxable_building": 150000, "exempt_land": 0, "exempt_building": 250000}]
+        result = analysis.analyze(base_data(assessments=history), {"audience": audience}, TODAY)
+        return next(f for f in result["flags"] if f["title"].startswith("Abatement cliff"))
+
+    def test_cliff_quotes_full_bill_for_every_audience(self):
+        for audience in ("buyer", "owner", "investor", "renter"):
+            self.assertIn("Without the abatement about $6,999 a year, or $3,499 more", self.cliff(audience)["evidence"])
+
+    def test_homestead_bill_is_separate_and_only_for_possible_occupants(self):
+        for audience in ("buyer", "owner"):
+            self.assertIn("With Homestead, if the owner lives here, about $5,599", self.cliff(audience)["evidence"])
+        self.assertNotIn("With Homestead", self.cliff("investor")["evidence"])
+
+    def test_cliff_severity_still_assumes_an_occupant_takes_homestead(self):
+        self.assertEqual(self.cliff("buyer")["severity"], "warn")
+        self.assertEqual(self.cliff("investor")["severity"], "critical")
+
 
 class EntityTests(unittest.TestCase):
     def test_person_surnamed_church_is_private(self):
