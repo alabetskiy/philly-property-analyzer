@@ -260,6 +260,46 @@ class AbatementEdgeTests(unittest.TestCase):
         self.assertEqual(self.cliff("investor")["severity"], "critical")
 
 
+class TaxJumpTests(unittest.TestCase):
+    def row(self, year, taxable, exempt=0):
+        return {"year": str(year), "market_value": taxable + exempt, "taxable_land": 0, "taxable_building": taxable,
+                "exempt_land": 0, "exempt_building": exempt}
+
+    def jump_flags(self, *rows):
+        result = analysis.analyze(base_data(assessments=list(rows)), today=TODAY)
+        return [f for f in result["flags"] if f["title"].startswith("Tax bill jumps")]
+
+    def test_large_jump_is_flagged_with_both_years(self):
+        flags = self.jump_flags(self.row(2026, 110000, 390000), self.row(2027, 410000, 90000))
+        self.assertEqual(len(flags), 1)
+        self.assertEqual(flags[0]["severity"], "warn")
+        self.assertEqual(flags[0]["title"], "Tax bill jumps about $4,199 in tax year 2027")
+        self.assertIn("Tax year 2026 about $1,540 on $110,000 taxable", flags[0]["evidence"])
+        self.assertIn("tax year 2027 about $5,739 on $410,000", flags[0]["evidence"])
+        self.assertIn("exempt amount from $390,000 to $90,000", flags[0]["evidence"])
+
+    def test_small_rise_is_not_flagged(self):
+        self.assertEqual(self.jump_flags(self.row(2026, 100000), self.row(2027, 150000)), [])
+
+    def test_large_dollars_but_small_share_is_not_flagged(self):
+        self.assertEqual(self.jump_flags(self.row(2026, 400000), self.row(2027, 480000)), [])
+
+    def test_falling_bill_is_not_flagged(self):
+        self.assertEqual(self.jump_flags(self.row(2026, 410000), self.row(2027, 110000)), [])
+
+    def test_gap_in_years_is_not_called_year_over_year(self):
+        self.assertEqual(self.jump_flags(self.row(2024, 110000), self.row(2027, 410000)), [])
+
+    def test_single_year_of_history_is_not_flagged(self):
+        self.assertEqual(self.jump_flags(self.row(2027, 410000)), [])
+
+    def test_cliff_names_the_tax_year_instead_of_now(self):
+        rows = [self.row(2026, 110000, 390000), self.row(2027, 410000, 90000)]
+        result = analysis.analyze(base_data(assessments=rows), today=TODAY)
+        cliff = next(f for f in result["flags"] if f["title"].startswith("Abatement cliff"))
+        self.assertTrue(cliff["evidence"].startswith("About $5,739 a year for tax year 2027"))
+
+
 class EntityTests(unittest.TestCase):
     def test_person_surnamed_church_is_private(self):
         self.assertFalse(analysis.is_entity("CHURCH JOHN"))

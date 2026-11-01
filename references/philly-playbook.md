@@ -78,6 +78,7 @@ Sources: [Report deed fraud](https://www.phila.gov/2025-06-05-philadelphia-makes
 | Ghost renovation, or a claim with no permit | Inspector who opens panels and checks basement and rear walls. Ask for permits or invoices. |
 | Expired permit or no certificate of occupancy | Seller closes it before settlement. Lenders may care. |
 | Abatement cliff | Budget on the full bill. Confirm end year and schedule with OPA. |
+| Tax bill jump | Ask OPA why it changed and whether the exempt amount is right. Rework the budget and escrow. |
 | Seller mismatch or nominal deed | Title company before any deposit. |
 | Sheriff's deed | Ask the title company about redemption rights and exceptions. |
 | Unit count versus zoning | Ask for the zoning permit or certificate of occupancy for those units. |
