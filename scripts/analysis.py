@@ -522,9 +522,12 @@ def analyze_tax(data, ctx, tax, today):
             f"A tax exemption usually belongs to the owner, not the house. A new private owner could face about {_money(tax['full_bill'])} a year.",
             "Why is this exempt, and what happens to the exemption at sale?", LINKS["property"]))
     if tax["abated"]:
-        jump = tax["with_homestead_bill"] if for_whom in ("buyer", "owner") else tax["full_bill"]
-        extra = jump - tax["current_bill"]
-        owner = (data.get("opa") or {}).get("owner_1") or ""
+        may_occupy = for_whom in ("buyer", "owner")
+        extra = tax["full_bill"] - tax["current_bill"]
+        # Severity assumes a possible occupant takes Homestead; the quoted figure can't, since nobody knows they will.
+        severity_extra = tax["with_homestead_bill"] - tax["current_bill"] if may_occupy else extra
+        homestead_note = f" With Homestead, if the owner lives here, about {_money(tax['with_homestead_bill'])}." if may_occupy else ""
+        owner =(data.get("opa") or {}).get("owner_1") or ""
         if PUBLIC_OWNER.search(owner.upper()):
             flags.append(_flag(
                 "tax", "warn", "Partial tax exemption may not survive a sale",
@@ -537,12 +540,12 @@ def analyze_tax(data, ctx, tax, today):
         if end and end <= today.year:
             end = None
         left = (end - today.year) if end else None
-        severity = "critical" if left is not None and left <= 2 and extra >= 3000 else "warn"
+        severity = "critical" if left is not None and left <= 2 and severity_extra >= 3000 else "warn"
         when = f"around {end} (estimate based on when the exemption first appears)" if end else "on a date to confirm with OPA"
         flags.append(_flag(
             "tax", severity, "Abatement cliff: the tax bill is due to jump",
             f"Now about {_money(tax['current_bill'])} a year on {_money(tax['taxable'])} taxable. "
-            f"Without the abatement about {_money(jump)} a year, or {_money(extra)} more. It ends {when}.",
+            f"Without the abatement about {_money(tax['full_bill'])} a year, or {_money(extra)} more.{homestead_note} It ends {when}.",
             "Philadelphia abatements exempt new construction or improvements for a fixed term. Mortgage quotes based on today's bill can understate what you'll pay later. Newer abatements also phase down year by year, so the increase may arrive early.",
             "What year does the abatement end, and is it the phased version? Run your budget on the full bill. Note Homestead can't be used while a 10-year abatement is active.",
             LINKS["abatement"]))
