@@ -194,15 +194,15 @@ class PriceTests(unittest.TestCase):
 
 class AddressTests(unittest.TestCase):
     def test_split_unit_forms(self):
-        self.assertEqual(sources.split_address("1902 Pine St, Unit 2R, Philadelphia, PA 19103"), ("1902 Pine St", "2R"))
-        self.assertEqual(sources.split_address("1902 Pine St #2R"), ("1902 Pine St", "2R"))
-        self.assertEqual(sources.split_address("1902 Pine St Apt 2r"), ("1902 Pine St", "2R"))
-        self.assertEqual(sources.split_address("1902 Pine St"), ("1902 Pine St", None))
+        self.assertEqual(sources.split_address("100 Test St, Unit 2R, Philadelphia, PA 19103"), ("100 Test St", "2R"))
+        self.assertEqual(sources.split_address("100 Test St #2R"), ("100 Test St", "2R"))
+        self.assertEqual(sources.split_address("100 Test St Apt 2r"), ("100 Test St", "2R"))
+        self.assertEqual(sources.split_address("100 Test St"), ("100 Test St", None))
 
     def test_zip_and_state_are_stripped(self):
-        self.assertEqual(sources.split_address("308 Cross St, Philadelphia, PA 19147"), ("308 Cross St", None))
-        self.assertEqual(sources.split_address("308 Cross St, PA 19147"), ("308 Cross St", None))
-        self.assertEqual(sources.split_address("308 Cross St 19147"), ("308 Cross St", None))
+        self.assertEqual(sources.split_address("100 Test St, Philadelphia, PA 19147"), ("100 Test St", None))
+        self.assertEqual(sources.split_address("100 Test St, PA 19147"), ("100 Test St", None))
+        self.assertEqual(sources.split_address("100 Test St 19147"), ("100 Test St", None))
 
     def test_addresses_outside_philadelphia_are_refused(self):
         for address in ("123 Main St, Cherry Hill, NJ 08002", "100 Bala Ave, Bala Cynwyd, PA 19004",
@@ -210,8 +210,8 @@ class AddressTests(unittest.TestCase):
             self.assertIsNotNone(sources.outside_philadelphia(address), address)
 
     def test_philadelphia_addresses_are_allowed(self):
-        for address in ("308 Cross St", "308 Cross St, Philadelphia, PA 19147", "308 Cross St, Philly, PA",
-                        "308 Cross St 19147", "1902 Pine St Unit 2R"):
+        for address in ("100 Test St", "100 Test St, Philadelphia, PA 19147", "100 Test St, Philly, PA",
+                        "100 Test St 19147", "100 Test St Unit 2R"):
             self.assertIsNone(sources.outside_philadelphia(address), address)
 
     def test_street_names_are_not_mistaken_for_units(self):

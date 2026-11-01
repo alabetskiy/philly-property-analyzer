@@ -112,7 +112,7 @@ def outside_philadelphia(raw):
 
 
 def split_address(raw):
-    """Separate '1902 Pine St, Unit 2R, Philadelphia, PA 19103' into ('1902 Pine St', '2R')."""
+    """Separate '100 Test St, Unit 2R, Philadelphia, PA 19103' into ('100 Test St', '2R')."""
     text = re.sub(r",?\s*(PHILADELPHIA|PHILLY|PHILA)\b.*$", "", raw.strip(), flags=re.I)
     text = re.sub(r",?\s*(?:PA|PENNSYLVANIA)?\s*\b191\d{2}(?:-\d{4})?\s*$", "", text, flags=re.I)
     text = re.sub(r",\s*(?:PA|PENNSYLVANIA)\s*$", "", text, flags=re.I)
