@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*.skill
+report.html
+compare.html
+.claude/

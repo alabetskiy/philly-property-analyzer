@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: renter-unit-scope
+expected_outcome: |
+  Runs a renter check, states that the report covers the whole building instead of the unit, and tells the user to check tax balance and ask for rental documents.
